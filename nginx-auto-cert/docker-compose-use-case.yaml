@@ -1,0 +1,111 @@
+version: '3'
+services:
+  codeless-micro-user:
+    image: my/codeless-micro-user
+    environment:
+      NODE_ENV: production
+      DB_SERVICE: mongodb
+      JWT_SECRET: <secret>
+    depends_on:
+      - mongodb
+    ports:
+      - '9001:80'
+
+  codeless-micro-app:
+    image: my/codeless-micro-app
+    environment:
+      NODE_ENV: production
+      DB_SERVICE: mongodb
+      JWT_SECRET: <secret>
+    depends_on:
+      - mongodb
+    ports:
+      - '9002:80'
+
+  codeless-micro-file:
+    image: my/codeless-micro-file
+    environment:
+      NODE_ENV: production
+      DB_SERVICE: mongodb
+      JWT_SECRET: <secret>
+    depends_on:
+      - mongodb
+    ports:
+      - '9004:80'
+
+  codeless-micro-code-generator:
+    image: my/codeless-micro-code-generator
+    environment:
+      NODE_ENV: production
+      STORAGE: 'http://codeless-micro-file'
+      STORAGE_DOMAIN: 'http://localhost:9004'
+      JWT_SECRET: <secret>
+    ports:
+      - '9005:80'
+
+  codeless-micro-code-controller:
+    image: my/codeless-micro-code-controller
+    environment:
+      NODE_ENV: production
+      APP_HOST: 'http://codeless-micro-app'
+      TEMPLATE_HOST: 'http://codeless-micro-template'
+      GENERATOR_HOST: 'http://codeless-micro-code-generator'
+      JWT_SECRET: <secret>
+      DB_SERVICE: mongodb
+    depends_on:
+      - mongodb
+    ports:
+      - '9006:80'
+
+  codeless-api-compression:
+    image: nginx
+    volumes:
+     # - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./conf.d:/etc/nginx/conf.d
+    ports:
+      - '9007:80'
+    depends_on:
+      - codeless-micro-user
+      - codeless-micro-app
+      - codeless-micro-file
+      - codeless-micro-code-generator
+      - codeless-micro-code-controller
+    environment:
+      - VIRTUAL_HOST=gg.com
+      - LETSENCRYPT_HOST=gg.com
+      - LETSENCRYPT_EMAIL=my@main.com
+
+  mongodb:
+    image: mongo
+    volumes:
+      - ./mongosave:/data/db
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./current/public:/usr/share/nginx/html
+      - ./certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    labels:
+      - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy"
+
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes:
+        - ./certs:/etc/nginx/certs
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+        - vhost:/etc/nginx/vhost.d
+        - ./current/public:/usr/share/nginx/html
+    depends_on:
+        - nginx-proxy
+
+volumes:
+  vhost:
+networks:
+  default:
+    external:
+      name: kaptuer-compose-network
