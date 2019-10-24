@@ -1,0 +1,30 @@
+# Mongo-Sync Configurations
+
+local:
+  db: 'test'
+  host:
+    port: 27017
+  access:
+    username: 'root'
+    password: 'rootPass'
+
+remote:
+  db: 'test'
+  host:
+    url: 'db2'
+    port: 27017
+  access:
+    username: 'root'
+    password: 'rootPass'
+
+tunnel:
+  on: false
+  access:
+    username: 'remote_ssh_user'
+    port: 22
+
+# For now :local just
+# assumes DB is at localhost:port
+
+# All of the parameters above are required,
+# without them, the script will fail

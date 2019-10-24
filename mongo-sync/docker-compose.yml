@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  db1:
+    image: mongo
+    volumes:
+      - ./:/mongo-sync
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootPass
+  db2:
+    image: mongo
+    volumes:
+      - ./:/mongo-sync
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootPass
